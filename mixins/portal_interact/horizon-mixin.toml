@@ -1,0 +1,80 @@
+[mod]
+id = "portal_interact"
+version = "0.1.0"
+priority = 100
+
+# The commit it was tested on: it answers two of the game's own portal
+# checks, so a Horizon change in the portal or mod-hook sources needs a
+# re-check.
+[compatibility]
+horizon_revision = "2ebf00a0281c592f79191e76fce0e7d522c6f425"
+
+# The mod's brain: pure standard library, no game types, tested on its own.
+[[module]]
+id = "runtime"
+file = "crates/horizon-client/src/game.rs"
+name = "portal_interact"
+source = "runtime.rs"
+
+# The game's "is the player mid portal transition?" check, as the inventory
+# key and a ridden mount's inventory key consult it. While the mod asks, the
+# answer is no, so the key opens the screen from inside the portal as it
+# would anywhere else. Window Games only; the server thread's own check
+# stays truthful.
+[[injection]]
+id = "transition"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::nether_portal::Game<'_>::in_portal_transition"
+helper = "portal.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&self" },
+]
+
+# The forced close the portal runs over the player's screens every tick it
+# stands inside: stood down while a container the player opened is up, so
+# the inventory stays. The confusion overlay freezes for exactly that long,
+# and the teleport happens on the server regardless.
+[[injection]]
+id = "keep"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::nether_portal::Game<'_>::client_portal_effect"
+helper = "effect.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+# The row in Options > Mods: the single Enabled toggle.
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+# The settings page: the one Enabled row, in the state the file holds.
+[[injection]]
+id = "settings"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings"
+helper = "settings.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "buttons", ty = "&mut Vec<String>", value = "&mut *buttons" },
+]
+
+# A click on the settings page, stored for the next tick's gates to read.
+[[injection]]
+id = "click"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings_click"
+helper = "click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "button", ty = "usize", value = "button" },
+]

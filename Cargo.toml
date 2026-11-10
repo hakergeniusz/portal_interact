@@ -1,0 +1,12 @@
+[package]
+name = "horizon-portal-interact"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Open and keep your inventory open while you stand in a nether portal. A Horizon native mod."
+publish = false
+
+# The runtime doubles as the mod's library (its tests) and the module the
+# bundle injects into the game; the helper files compile only inside it.
+[lib]
+path = "mixins/portal_interact/runtime.rs"
