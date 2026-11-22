@@ -1,0 +1,43 @@
+id = "portal_interact"
+name = "Portal Interact"
+version = "0.2.0"
+description = "Let you open your inventory (and a mount's) and keep it open while you stand in a nether portal. The teleport still happens — the game just stops slamming your screens shut."
+authors = ["hakergeniusz"]
+license = "MIT"
+api = "0.2"
+side = "client"
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "f037744a79f9982c47876f49c5a3067279f88706"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# The game's "is the player mid portal transition?" check, as the inventory
+# key and a ridden mount's inventory key consult it. While the mod asks, the
+# answer is no, so the key opens the screen from inside the portal as it
+# would anywhere else. Window Games only; the server thread's own check
+# stays truthful.
+[[native.mixin]]
+id = "transition"
+target = "horizon_client::game::nether_portal::Game<'_>::in_portal_transition"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/transition.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&self" },
+]
+
+# The forced close the portal runs over the player's screens every tick it
+# stands inside: stood down while a container the player opened is up, so
+# the inventory stays. The confusion overlay freezes for exactly that long,
+# and the teleport happens on the server regardless.
+[[native.mixin]]
+id = "keep"
+target = "horizon_client::game::nether_portal::Game<'_>::client_portal_effect"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/effect.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]

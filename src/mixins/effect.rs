@@ -10,18 +10,13 @@
 // the game's own way.
 // Copyright (c) 2026 hakergeniusz. MIT.
 fn portal_interact_keep(game: &mut crate::game::Game<'_>) -> core::ops::ControlFlow<bool> {
-    use crate::game::portal_interact as portal_interact;
     let container_open = matches!(
         game.screen,
         crate::game::Screen::Inventory | crate::game::Screen::Creative
     );
-    if game.native_window()
-        && game.native_on(portal_interact::ID)
-        && portal_interact::keeps_container(
-            portal_interact::setting_on(|key| game.native_setting(portal_interact::ID, key)),
-            container_open,
-        )
-    {
+    let window = !game.is_logical_server();
+    let on = portal_interact::setting_on(game.stored_setting("portal_interact", "enabled").as_deref());
+    if portal_interact::keeps_container(on && window, container_open) {
         // The player is browsing their inventory: leave it alone this tick.
         core::ops::ControlFlow::Break(false)
     } else {

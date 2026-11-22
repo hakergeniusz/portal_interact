@@ -7,11 +7,9 @@
 // runs on regardless.
 // Copyright (c) 2026 hakergeniusz. MIT.
 fn portal_interact_transition(game: &crate::game::Game<'_>) -> core::ops::ControlFlow<bool> {
-    use crate::game::portal_interact as portal_interact;
-    if game.native_window()
-        && game.native_on(portal_interact::ID)
-        && portal_interact::setting_on(|key| game.native_setting(portal_interact::ID, key))
-    {
+    let window = !game.is_logical_server();
+    let on = portal_interact::setting_on(game.stored_setting("portal_interact", "enabled").as_deref());
+    if window && on {
         // Not mid transition, as far as the player's screens are concerned.
         core::ops::ControlFlow::Break(false)
     } else {
